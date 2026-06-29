@@ -26,6 +26,40 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// --- Security helpers ---
+const HEX_COLOR = /^#[0-9a-fA-F]{3,8}$/;
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function validateTokens(category, data) {
+  const reject = (msg) => { throw Object.assign(new Error(msg), { statusCode: 400 }); };
+
+  if (category === 'colors') {
+    if (!Array.isArray(data)) reject('Colors must be an array');
+    for (const c of data) {
+      if (typeof c.name !== 'string' || c.name.length > 128) reject('Invalid color name');
+      if (typeof c.value !== 'string' || !HEX_COLOR.test(c.value)) reject('Invalid hex color: ' + escapeHtml(String(c.value)));
+    }
+  } else if (category === 'typography') {
+    if (!Array.isArray(data)) reject('Typography must be an array');
+    const allowed = new Set(['fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing']);
+    for (const t of data) {
+      if (typeof t.name !== 'string' || t.name.length > 64) reject('Invalid type name');
+      if (typeof t.family !== 'string' || t.family.length > 128) reject('Invalid font family');
+      for (const k of Object.keys(t)) {
+        if (k !== 'name' && !allowed.has(k)) reject('Invalid typography key: ' + escapeHtml(k));
+      }
+    }
+  }
+}
+
 // --- In-memory store (replace with DB in production) ---
 const store = {
   tokens: {
@@ -74,15 +108,47 @@ app.get('/api/tokens/:category', (req, res) => {
 app.put('/api/tokens/:category', (req, res) => {
   const { category } = req.params;
   if (!store.tokens[category]) return res.status(404).json({ error: 'Category not found' });
+  try {
+    validateTokens(category, req.body);
+  } catch (err) {
+    return res.status(err.statusCode || 400).json({ error: err.message });
+  }
   store.tokens[category] = req.body;
   res.json({ status: 'updated', category });
 });
 
 // --- Code Generation API ---
 
+function sanitizeTokens(tokens) {
+  const clean = {};
+  if (tokens.colors && Array.isArray(tokens.colors)) {
+    clean.colors = tokens.colors.map(c => ({
+      name: String(c.name || ''),
+      value: HEX_COLOR.test(c.value) ? c.value : '#000000',
+      role: String(c.role || '')
+    }));
+  }
+  if (tokens.typography && Array.isArray(tokens.typography)) {
+    clean.typography = tokens.typography.map(t => ({
+      name: String(t.name || ''),
+      family: String(t.family || ''),
+      size: String(t.size || ''),
+      weight: String(t.weight || ''),
+      lineHeight: String(t.lineHeight || '')
+    }));
+  }
+  if (tokens.spacing && typeof tokens.spacing === 'object') {
+    clean.spacing = {};
+    for (const [k, v] of Object.entries(tokens.spacing)) {
+      clean.spacing[k] = String(v);
+    }
+  }
+  return clean;
+}
+
 // POST generate CSS from tokens
 app.post('/api/generate/css', (req, res) => {
-  const tokens = req.body.tokens || store.tokens;
+  const tokens = sanitizeTokens(req.body.tokens || store.tokens);
   const minify = req.query.minify === 'true';
 
   const css = generateCSS(tokens, minify);
@@ -92,7 +158,7 @@ app.post('/api/generate/css', (req, res) => {
 
 // POST generate full HTML bundle
 app.post('/api/generate/bundle', (req, res) => {
-  const tokens = req.body.tokens || store.tokens;
+  const tokens = sanitizeTokens(req.body.tokens || store.tokens);
   const css = generateCSS(tokens, false);
   const html = generateHTML(tokens, css);
 
@@ -146,7 +212,8 @@ function generateCSS(tokens, minify) {
   if (tokens.colors) {
     tokens.colors.forEach(c => {
       const varName = '--' + (c.role || c.name.toLowerCase().replace(/[\/\s]+/g, '-'));
-      rules.push(`  ${varName}: ${c.value};`);
+      const safeValue = HEX_COLOR.test(c.value) ? c.value : '#000000';
+      rules.push(`  ${varName}: ${safeValue};`);
     });
   }
   if (tokens.spacing) {
@@ -157,7 +224,8 @@ function generateCSS(tokens, minify) {
   if (tokens.typography) {
     tokens.typography.forEach(t => {
       const name = t.name.toLowerCase().replace(/\s+/g, '-');
-      rules.push(`  --font-${name}: ${t.weight} ${t.size}/${t.lineHeight} '${t.family}';`);
+      const safeFamily = (t.family || '').replace(/['"\\;\{\}]/g, '');
+      rules.push(`  --font-${name}: ${t.weight} ${t.size}/${t.lineHeight} '${safeFamily}';`);
     });
   }
   rules.push('}');
@@ -183,6 +251,16 @@ function generateCSS(tokens, minify) {
 }
 
 function generateHTML(tokens, css) {
+  const colorCount = (tokens.colors || []).length;
+  const typeCount = (tokens.typography || []).length;
+  const swatches = (tokens.colors || []).map(c => {
+    const safeValue = HEX_COLOR.test(c.value) ? c.value : '#000000';
+    const fg = isLight(safeValue) ? '#000' : '#fff';
+    return `<div class="swatch" style="background:${safeValue}; color:${fg}">
+          <span>${escapeHtml(c.name)}</span><code>${escapeHtml(safeValue)}</code>
+        </div>`;
+  }).join('\n      ');
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -198,14 +276,10 @@ ${css}
   <main class="app-container">
     <header>
       <h1>Vibe Coding</h1>
-      <p>Design system generated from ${tokens.colors?.length || 0} color tokens, ${tokens.typography?.length || 0} type scales.</p>
+      <p>Design system generated from ${colorCount} color tokens, ${typeCount} type scales.</p>
     </header>
     <section class="color-palette">
-      ${(tokens.colors || []).map(c =>
-        `<div class="swatch" style="background:${c.value}; color:${isLight(c.value) ? '#000' : '#fff'}">
-          <span>${c.name}</span><code>${c.value}</code>
-        </div>`
-      ).join('')}
+      ${swatches}
     </section>
   </main>
 </body>

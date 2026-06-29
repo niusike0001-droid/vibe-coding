@@ -28,6 +28,8 @@ app.use('/api/', limiter);
 
 // --- Security helpers ---
 const HEX_COLOR = /^#[0-9a-fA-F]{3,8}$/;
+const SAFE_CSS_NUM = /^[\d.]+(px|em|rem|%|vh|vw|s|ms)?$/;
+const SPACING_KEYS = new Set(['unit', 'gutter', 'margin', 'containerMax']);
 
 function escapeHtml(str) {
   return String(str)
@@ -36,6 +38,12 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function safeIdent(s, fallback) {
+  if (typeof s !== 'string') return fallback;
+  const cleaned = s.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/^-+/, '');
+  return cleaned || fallback;
 }
 
 function validateTokens(category, data) {
@@ -123,24 +131,27 @@ function sanitizeTokens(tokens) {
   const clean = {};
   if (tokens.colors && Array.isArray(tokens.colors)) {
     clean.colors = tokens.colors.map(c => ({
-      name: String(c.name || ''),
+      name: escapeHtml(String(c.name || '')).slice(0, 128),
       value: HEX_COLOR.test(c.value) ? c.value : '#000000',
-      role: String(c.role || '')
+      role: safeIdent(String(c.role || ''), 'custom')
     }));
   }
   if (tokens.typography && Array.isArray(tokens.typography)) {
     clean.typography = tokens.typography.map(t => ({
-      name: String(t.name || ''),
-      family: String(t.family || ''),
-      size: String(t.size || ''),
-      weight: String(t.weight || ''),
-      lineHeight: String(t.lineHeight || '')
+      name: escapeHtml(String(t.name || '')).slice(0, 64),
+      family: (t.family || '').replace(/['"\\;\{\}<>&]/g, '').slice(0, 128),
+      size: SAFE_CSS_NUM.test(String(t.size || '')) ? String(t.size) : '16px',
+      weight: /^[1-9]00$/.test(String(t.weight || '')) ? String(t.weight) : '400',
+      lineHeight: /^[\d.]+$/.test(String(t.lineHeight || '')) ? String(t.lineHeight) : '1.5'
     }));
   }
   if (tokens.spacing && typeof tokens.spacing === 'object') {
     clean.spacing = {};
-    for (const [k, v] of Object.entries(tokens.spacing)) {
-      clean.spacing[k] = String(v);
+    for (const k of SPACING_KEYS) {
+      if (tokens.spacing[k] !== undefined) {
+        const val = String(tokens.spacing[k]).replace(/[^a-zA-Z0-9]/g, '');
+        clean.spacing[k] = val || '0px';
+      }
     }
   }
   return clean;
@@ -211,19 +222,21 @@ function generateCSS(tokens, minify) {
   rules.push(':root {');
   if (tokens.colors) {
     tokens.colors.forEach(c => {
-      const varName = '--' + (c.role || c.name.toLowerCase().replace(/[\/\s]+/g, '-'));
+      const varName = '--' + safeIdent(c.role || c.name, 'color');
       const safeValue = HEX_COLOR.test(c.value) ? c.value : '#000000';
       rules.push(`  ${varName}: ${safeValue};`);
     });
   }
   if (tokens.spacing) {
-    Object.entries(tokens.spacing).forEach(([k, v]) => {
-      rules.push(`  --spacing-${k}: ${v};`);
-    });
+    for (const k of SPACING_KEYS) {
+      if (tokens.spacing[k] !== undefined) {
+        rules.push(`  --spacing-${k}: ${tokens.spacing[k]};`);
+      }
+    }
   }
   if (tokens.typography) {
     tokens.typography.forEach(t => {
-      const name = t.name.toLowerCase().replace(/\s+/g, '-');
+      const name = safeIdent(t.name, 'body');
       const safeFamily = (t.family || '').replace(/['"\\;\{\}]/g, '');
       rules.push(`  --font-${name}: ${t.weight} ${t.size}/${t.lineHeight} '${safeFamily}';`);
     });

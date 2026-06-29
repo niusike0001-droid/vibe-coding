@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Vibe Coding">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+
+  <title>Vibe Coding</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time" id="statusTime">10:09</span>
+    <span class="status-icons">
+      <span class="status-dot status-dot--active"></span>
+      <span class="status-dot"></span>
+    </span>
+  </div>
+
+  <!-- App Container -->
+  <div id="app">
+
+    <!-- Screen: Dashboard -->
+    <section id="screen-dashboard" class="screen active">
+      <header class="screen-header">
+        <h1 class="screen-title">Vibe Coding</h1>
+        <span class="screen-version label-caps">v1.0</span>
+      </header>
+
+      <div class="card card--active" id="projectCard">
+        <div class="card-header">
+          <span class="card-label label-caps">Current Project</span>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title">Stitch AI Style Assistant</h2>
+          <p class="card-desc body-md">Design system management &amp; code export for mobile-first applications.</p>
+        </div>
+        <div class="card-footer">
+          <span class="status-indicator status-indicator--on">● LIVE</span>
+          <span class="label-caps status-meta">Last edit: <time id="lastEdit">--</time></span>
+        </div>
+      </div>
+
+      <nav class="section-nav">
+        <h3 class="section-title label-caps">Workspace</h3>
+        <div class="grid-2col">
+          <button class="nav-card" data-screen="tokens">
+            <span class="nav-card-icon">◇</span>
+            <span class="nav-card-label label-caps">Design Tokens</span>
+          </button>
+          <button class="nav-card" data-screen="code">
+            <span class="nav-card-icon">▣</span>
+            <span class="nav-card-label label-caps">Code Export</span>
+          </button>
+          <button class="nav-card" data-screen="deploy">
+            <span class="nav-card-icon">⇧</span>
+            <span class="nav-card-label label-caps">Deploy</span>
+          </button>
+          <button class="nav-card" data-screen="settings">
+            <span class="nav-card-icon">⚙</span>
+            <span class="nav-card-label label-caps">Settings</span>
+          </button>
+        </div>
+      </nav>
+
+      <div class="section">
+        <h3 class="section-title label-caps">Recent Exports</h3>
+        <ul class="list-divider" id="recentExports">
+          <li class="list-item list-item--empty body-md">No exports yet</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Screen: Design Tokens -->
+    <section id="screen-tokens" class="screen">
+      <header class="screen-header">
+        <button class="btn-back" data-screen="dashboard">← Back</button>
+        <h1 class="screen-title">Design Tokens</h1>
+      </header>
+
+      <div class="tokens-sections">
+        <!-- Colors -->
+        <div class="token-group">
+          <button class="token-group-header">
+            <span class="label-caps">Colors</span>
+            <span class="token-group-arrow">▾</span>
+          </button>
+          <div class="token-group-body">
+            <div class="token-row">
+              <span class="token-name body-md">Primary</span>
+              <div class="token-value-row">
+                <span class="token-swatch" style="background:#000000"></span>
+                <code class="token-code code-sm">#000000</code>
+              </div>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Surface</span>
+              <div class="token-value-row">
+                <span class="token-swatch token-swatch--bordered" style="background:#FFFFFF"></span>
+                <code class="token-code code-sm">#FFFFFF</code>
+              </div>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Structural Line</span>
+              <div class="token-value-row">
+                <span class="token-swatch" style="background:#E5E5E5"></span>
+                <code class="token-code code-sm">#E5E5E5</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typography -->
+        <div class="token-group">
+          <button class="token-group-header">
+            <span class="label-caps">Typography</span>
+            <span class="token-group-arrow">▾</span>
+          </button>
+          <div class="token-group-body">
+            <div class="token-row">
+              <span class="token-name body-md">Headline</span>
+              <code class="token-code code-sm">Source Serif 4 / 48px / 700</code>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Body</span>
+              <code class="token-code code-sm">Source Serif 4 / 16px / 400</code>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Code</span>
+              <code class="token-code code-sm">JetBrains Mono / 13px / 400</code>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Labels</span>
+              <code class="token-code code-sm">JetBrains Mono / 11px / 700</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spacing -->
+        <div class="token-group">
+          <button class="token-group-header">
+            <span class="label-caps">Spacing</span>
+            <span class="token-group-arrow">▾</span>
+          </button>
+          <div class="token-group-body">
+            <div class="token-row">
+              <span class="token-name body-md">Unit</span>
+              <code class="token-code code-sm">4px</code>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Gutter</span>
+              <code class="token-code code-sm">24px</code>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Margin (Desktop)</span>
+              <code class="token-code code-sm">48px</code>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Margin (Mobile)</span>
+              <code class="token-code code-sm">16px</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Components -->
+        <div class="token-group">
+          <button class="token-group-header">
+            <span class="label-caps">Components</span>
+            <span class="token-group-arrow">▾</span>
+          </button>
+          <div class="token-group-body">
+            <div class="token-row">
+              <span class="token-name body-md">Buttons</span>
+              <code class="token-code code-sm">Solid / Outline / Invert</code>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Cards</span>
+              <code class="token-code code-sm">1px border / 0px radius</code>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Dividers</span>
+              <code class="token-code code-sm">1px solid #000 / #E5E5E5</code>
+            </div>
+            <div class="token-row">
+              <span class="token-name body-md">Elevation</span>
+              <code class="token-code code-sm">Tonal layers only</code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen-actions">
+        <button class="btn btn--primary" id="btnExportTokens">Export DESIGN.md</button>
+        <button class="btn btn--secondary" id="btnEditTokens">Edit Tokens</button>
+      </div>
+    </section>
+
+    <!-- Screen: Code Export -->
+    <section id="screen-code" class="screen">
+      <header class="screen-header">
+        <button class="btn-back" data-screen="dashboard">← Back</button>
+        <h1 class="screen-title">Code Export</h1>
+      </header>
+
+      <div class="code-tabs">
+        <button class="code-tab code-tab--active" data-file="index.html">index.html</button>
+        <button class="code-tab" data-file="style.css">style.css</button>
+        <button class="code-tab" data-file="tokens.json">tokens.json</button>
+      </div>
+
+      <div class="code-editor" id="codeEditor">
+        <pre class="code-content code-sm"><code id="codeDisplay">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot;
+    content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot;&gt;
+  &lt;title&gt;Vibe Coding&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;app&quot;&gt;
+    &lt;header class=&quot;header&quot;&gt;
+      &lt;h1&gt;Vibe Coding&lt;/h1&gt;
+    &lt;/header&gt;
+    &lt;main&gt;
+      &lt;!-- Content from design tokens --&gt;
+    &lt;/main&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        <div class="code-line-numbers" id="codeLineNumbers"></div>
+      </div>
+
+      <div class="screen-actions">
+        <button class="btn btn--primary" id="btnCopyCode">Copy Code</button>
+        <button class="btn btn--secondary" id="btnDownloadCode">Download .zip</button>
+      </div>
+    </section>
+
+    <!-- Screen: Deploy -->
+    <section id="screen-deploy" class="screen">
+      <header class="screen-header">
+        <button class="btn-back" data-screen="dashboard">← Back</button>
+        <h1 class="screen-title">Deploy</h1>
+      </header>
+
+      <div class="deploy-options">
+        <div class="card deploy-card">
+          <div class="card-header">
+            <span class="card-label label-caps">Recommended</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">GitHub Pages</h3>
+            <p class="card-desc body-md">Static hosting with automatic HTTPS. Push to deploy.</p>
+            <div class="status-row">
+              <span class="status-indicator status-indicator--on">● Connected</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <input class="input" type="text" id="githubRepo" placeholder="username/repo-name" value="">
+            <button class="btn btn--primary btn--full" id="btnDeploy">Deploy to GitHub Pages</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <h3 class="card-title">Vercel</h3>
+            <p class="card-desc body-md">Serverless deployment with edge functions for backend API.</p>
+            <div class="status-row">
+              <span class="status-indicator status-indicator--off">○ Not configured</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <h3 class="card-title">Netlify</h3>
+            <p class="card-desc body-md">Static hosting with form handling and serverless functions.</p>
+            <div class="status-row">
+              <span class="status-indicator status-indicator--off">○ Not configured</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="deployLog" style="display:none">
+        <h3 class="section-title label-caps">Deploy Log</h3>
+        <pre class="log-output code-sm" id="logOutput"></pre>
+      </div>
+    </section>
+
+    <!-- Screen: Settings -->
+    <section id="screen-settings" class="screen">
+      <header class="screen-header">
+        <button class="btn-back" data-screen="dashboard">← Back</button>
+        <h1 class="screen-title">Settings</h1>
+      </header>
+
+      <div class="settings-group">
+        <div class="setting-row">
+          <span class="setting-label body-md">Auto-export on save</span>
+          <button class="toggle toggle--on" data-key="autoExport">ON</button>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label body-md">Minify CSS output</span>
+          <button class="toggle" data-key="minifyCss">OFF</button>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label body-md">Include reset styles</span>
+          <button class="toggle toggle--on" data-key="includeReset">ON</button>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label body-md">Dark mode (experimental)</span>
+          <button class="toggle" data-key="darkMode">OFF</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title label-caps">API Configuration</h3>
+        <div class="input-group">
+          <label class="input-label label-caps">Backend API URL</label>
+          <input class="input" type="text" id="apiUrl" placeholder="https://api.your-backend.com">
+        </div>
+        <div class="input-group">
+          <label class="input-label label-caps">API Key</label>
+          <input class="input" type="password" id="apiKey" placeholder="sk-...">
+        </div>
+        <button class="btn btn--primary" id="btnSaveSettings">Save Settings</button>
+      </div>
+
+      <div class="section section--danger">
+        <h3 class="section-title label-caps">Data Management</h3>
+        <button class="btn btn--danger" id="btnClearData">Clear All Local Data</button>
+        <button class="btn btn--secondary" id="btnExportData">Export All Data</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/screens/dashboard.js"></script>
+  <script src="/js/screens/tokens.js"></script>
+  <script src="/js/screens/code.js"></script>
+  <script src="/js/screens/deploy.js"></script>
+  <script src="/js/screens/settings.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
